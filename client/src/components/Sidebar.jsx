@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
 // import { assets } from "../assets";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, Images } from "lucide-react";
 
 const Sidebar = () => {
-  const { chats, setSelectedChat, theme, setTheme, user } = useAppContext();
+  const { chats, setSelectedChat, theme, setTheme, user, navigate } =
+    useAppContext();
   const [search, setSearch] = useState("");
 
   return (
@@ -65,6 +66,19 @@ const Sidebar = () => {
               />
             </div>
           ))}
+      </div>
+
+      {/* Library */}
+      <div
+        onClick={() => {
+          navigate("/perpustakaan");
+        }}
+        className="flex items-center gap-2 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all"
+      >
+        <Images size={16} className="text-gray-600 dark:text-white" />
+        <div className="flex flex-col text-sm">
+          <p>Perpustakaan</p>
+        </div>
       </div>
     </div>
   );
