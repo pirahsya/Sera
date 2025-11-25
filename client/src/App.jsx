@@ -1,6 +1,9 @@
 import React from "react";
 import Sidebar from "./components/Sidebar";
 import { Route, Routes } from "react-router-dom";
+import ChatBox from "./components/ChatBox";
+import Credit from "./pages/Credit";
+import Library from "./pages/Library";
 
 const App = () => {
   return (
@@ -11,7 +14,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<ChatBox />} />
             <Route path="/kredit" element={<Credit />} />
-            <Route path="/perpustakaan" element={<Credit />} />
+            <Route path="/perpustakaan" element={<Library />} />
           </Routes>
         </div>
       </div>
