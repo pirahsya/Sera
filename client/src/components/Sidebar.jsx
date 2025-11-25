@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
 // import { assets } from "../assets";
+import { Search } from "lucide-react";
 
 const Sidebar = () => {
   const { chats, setSelectedChat, theme, setTheme, user } = useAppContext();
@@ -19,6 +20,18 @@ const Sidebar = () => {
       <button className="flex justify-center items-center w-full py-2 mt-10 text-white bg-linear-to-r from-[#7C55F0] to-[#3D81F6] text-sm rounded-md cursor-pointer">
         <span className="mr-2 text-xl">+</span> Obrolan baru
       </button>
+
+      {/* Search Conversations */}
+      <div className="flex items-center gap-2 p-3 mt-4 border border-gray-400 dark:border-white/20 rounded-md">
+        <Search size={16} className="text-gray-600 dark:text-white" />
+        <input
+          onChange={(e) => setSearch(e.target.value)}
+          value={search}
+          type="text"
+          placeholder="Cari obrolan"
+          className="text-xs placeholder:text-gray-400 outline-none"
+        />
+      </div>
     </div>
   );
 };
