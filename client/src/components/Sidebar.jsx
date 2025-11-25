@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
 // import { assets } from "../assets";
-import { Search, Trash2, Images } from "lucide-react";
+import { Search, Trash2, Images, Wallet } from "lucide-react";
 
 const Sidebar = () => {
   const { chats, setSelectedChat, theme, setTheme, user, navigate } =
@@ -78,6 +78,20 @@ const Sidebar = () => {
         <Images size={16} className="text-gray-600 dark:text-white" />
         <div className="flex flex-col text-sm">
           <p>Perpustakaan</p>
+        </div>
+      </div>
+
+      {/* Credit Purchase Option */}
+      <div
+        onClick={() => {
+          navigate("/kredit");
+        }}
+        className="flex items-center gap-2 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all"
+      >
+        <Wallet size={16} className="text-gray-600 dark:text-white" />
+        <div className="flex flex-col text-sm">
+          <p>Kredit: {user?.credits}</p>
+          <p className="text-xs text-gray-400">Isi kredit</p>
         </div>
       </div>
     </div>
