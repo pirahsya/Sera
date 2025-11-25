@@ -14,6 +14,11 @@ const Sidebar = () => {
         alt=""
         className="w-full max-w-48"
       />
+
+      {/* New Chat Button */}
+      <button className="flex justify-center items-center w-full py-2 mt-10 text-white bg-linear-to-r from-[#7C55F0] to-[#3D81F6] text-sm rounded-md cursor-pointer">
+        <span className="mr-2 text-xl">+</span> Obrolan baru
+      </button>
     </div>
   );
 };
