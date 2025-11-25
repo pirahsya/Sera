@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
 // import { assets } from "../assets";
-import { Search } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 
 const Sidebar = () => {
   const { chats, setSelectedChat, theme, setTheme, user } = useAppContext();
@@ -31,6 +31,40 @@ const Sidebar = () => {
           placeholder="Cari obrolan"
           className="text-xs placeholder:text-gray-400 outline-none"
         />
+      </div>
+
+      {/* Recent Chats */}
+      {chats.length > 0 && <p className="mt-4 text-sm">Obrolan terbaru</p>}
+      <div className="flex-1 overflow-y-scroll mt-3 text-sm space-y-3">
+        {chats
+          .filter((chat) =>
+            chat.messages[0]
+              ? chat.messages[0]?.content
+                  .toLowerCase()
+                  .includes(search.toLowerCase())
+              : chat.name.toLowerCase().includes(search.toLowerCase())
+          )
+          .map((chat) => (
+            <div
+              key={chat.id}
+              className="p-2 px-4 dark:bg-[#241E80]/10 border border-gray-300 dark:border-[#1E1980]/15 rounded-md cursor-pointer flex justify-between group"
+            >
+              <div>
+                <p className="truncate w-full">
+                  {chat.messages.length > 0
+                    ? chat.messages[0].content.slice(0, 32)
+                    : chat.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-[#B1A6C0]">
+                  {chat.updatedAt}
+                </p>
+              </div>
+              <Trash2
+                size={16}
+                className="hidden group-hover:block text-gray-600 dark:text-white cursor-pointer"
+              />
+            </div>
+          ))}
       </div>
     </div>
   );
