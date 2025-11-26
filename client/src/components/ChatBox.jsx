@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import Message from "./Message";
+import { SendHorizontal, Square } from "lucide-react";
 
 const ChatBox = () => {
   const { selectedChat, theme } = useAppContext();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [prompt, setPrompt] = useState("");
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+  };
 
   useEffect(() => {
     if (selectedChat) {
@@ -39,6 +46,26 @@ const ChatBox = () => {
           </div>
         )}
       </div>
+
+      {/* Prompt Inbux Box */}
+      <form
+        onSubmit={onSubmit}
+        className="bg-primary/5 dark:bg-[#241E80]/30 border border-primary/20 dark:border-[#1E1980]/30 rounded-full w-full max-w-2xl p-3 pl-4 mx-auto flex gap-4 items-center"
+      >
+        <input
+          onChange={(e) => setPrompt(e.target.value)}
+          value={prompt}
+          type="text"
+          className="flex-1 w-full text-sm outline-none"
+          required
+        />
+        <button
+          disabled={loading}
+          className="cursor-pointer text-gray-600 dark:text-white"
+        >
+          {loading ? <Square size={20} /> : <SendHorizontal size={20} />}
+        </button>
+      </form>
     </div>
   );
 };
