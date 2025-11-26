@@ -10,15 +10,20 @@ import {
   Sun,
   CircleUser,
   LogOut,
+  X,
 } from "lucide-react";
 
-const Sidebar = () => {
+const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
   const { chats, setSelectedChat, theme, setTheme, user, navigate } =
     useAppContext();
   const [search, setSearch] = useState("");
 
   return (
-    <div className="flex flex-col h-screen min-w-72 p-5 dark:bg-linear-to-b from-[#24216E]/30 to-[#000000]/30 border-r border-[#1E1980]/30 backdrop-blur-3xl transition-all duration-500 max-md:absolute left-0 z-1">
+    <div
+      className={`flex flex-col h-screen min-w-72 p-5 dark:bg-linear-to-b from-[#24216E]/30 to-[#000000]/30 border-r border-[#1E1980]/30 backdrop-blur-3xl transition-all duration-500 max-md:absolute left-0 z-1 ${
+        !isMenuOpen && "max-md:-translate-x-full"
+      }`}
+    >
       {/* Logo */}
       <img
         // src={theme === "dark" ? assets.logo_full : assets.logo_full_dark}
@@ -45,7 +50,14 @@ const Sidebar = () => {
 
       {/* Recent Chats */}
       {chats.length > 0 && <p className="mt-4 text-sm">Obrolan terbaru</p>}
-      <div className="flex-1 overflow-y-scroll mt-3 text-sm space-y-3">
+      <div
+        onClick={() => {
+          navigate("/");
+          setSelectedChat(chat);
+          setIsMenuOpen(false);
+        }}
+        className="flex-1 overflow-y-scroll mt-3 text-sm space-y-3"
+      >
         {chats
           .filter((chat) =>
             chat.messages[0]
@@ -81,6 +93,7 @@ const Sidebar = () => {
       <div
         onClick={() => {
           navigate("/perpustakaan");
+          setIsMenuOpen(false);
         }}
         className="flex items-center gap-2 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all"
       >
@@ -94,6 +107,7 @@ const Sidebar = () => {
       <div
         onClick={() => {
           navigate("/kredit");
+          setIsMenuOpen(false);
         }}
         className="flex items-center gap-2 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md cursor-pointer hover:scale-103 transition-all"
       >
@@ -128,7 +142,7 @@ const Sidebar = () => {
 
       {/* User Account */}
       <div className="flex items-center gap-3 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md cursor-pointer group">
-        <CircleUser size={16} className="text-gray-600 dark:text-white" />
+        <CircleUser size={24} className="text-gray-600 dark:text-white" />
         <p className="flex-1 text-sm dark:text-primary truncate">
           {user ? user.name : "Masuk ke akun Anda"}
         </p>
@@ -139,6 +153,12 @@ const Sidebar = () => {
           />
         )}
       </div>
+
+      <X
+        onClick={() => setIsMenuOpen(false)}
+        size={20}
+        className="absolute top-3 right-3 cursor-pointer md:hidden text-gray-600 dark:text-white"
+      />
     </div>
   );
 };
