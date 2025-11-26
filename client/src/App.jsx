@@ -5,6 +5,7 @@ import ChatBox from "./components/ChatBox";
 import Credit from "./pages/Credit";
 import Library from "./pages/Library";
 import { Menu } from "lucide-react";
+import "./assets/prism.css";
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
