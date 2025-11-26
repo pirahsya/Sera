@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import ChatBox from "./components/ChatBox";
 import Credit from "./pages/Credit";
 import Library from "./pages/Library";
 import { Menu } from "lucide-react";
+import Loading from "./pages/Loading";
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  if (pathname === "/memuat") return <Loading />;
 
   return (
     <>
