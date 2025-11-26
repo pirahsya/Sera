@@ -11,7 +11,7 @@ import { useAppContext } from "./context/AppContext";
 import Login from "./pages/Login";
 
 const App = () => {
-  const { user } = useAppContext;
+  const { user } = useAppContext();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
