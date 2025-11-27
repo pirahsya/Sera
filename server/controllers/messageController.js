@@ -2,6 +2,7 @@ import axios from "axios";
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 import imagekit from "../configs/imagekit.js";
+import openai from "../configs/openai.js";
 
 // API to send a text message to AI
 export const textMessageController = async (req, res) => {
