@@ -14,7 +14,7 @@ const Login = () => {
     const url = state === "login" ? "api/user/login" : "/api/user/register";
 
     try {
-      const { data } = await axios(url, { name, email, password });
+      const { data } = await axios.post(url, { name, email, password });
 
       if (data.success) {
         setToken(data.token);
