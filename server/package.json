@@ -19,6 +19,7 @@
     "express": "^5.1.0",
     "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
+    "midtrans-client": "^1.4.3",
     "mongoose": "^9.0.0",
     "openai": "^6.9.1"
   },
