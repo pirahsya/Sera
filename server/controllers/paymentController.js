@@ -1,5 +1,6 @@
 import midtransClient from "midtrans-client";
 import Transaction from "../models/Transaction.js";
+import User from "../models/User.js";
 
 // API to handle payment notification
 export const paymentNotification = async (req, res) => {
@@ -28,11 +29,19 @@ export const paymentNotification = async (req, res) => {
       return res.json({ success: false });
     }
 
-    if (success) transaction.isPaid = true;
+    if (success) {
+      transaction.isPaid = true;
+      await transaction.save();
 
-    if (failed) transaction.isPaid = false;
+      const user = await User.findById(transaction.userId);
+      user.credits = user.credits + transaction.credits;
+      await user.save();
+    }
 
-    await transaction.save();
+    if (failed) {
+      transaction.isPaid = false;
+      await transaction.save();
+    }
 
     res.json({ success: true });
   } catch (error) {
