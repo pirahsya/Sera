@@ -9,6 +9,7 @@ const transactionSchema = new mongoose.Schema(
     },
     planId: { type: String, required: true },
     amount: { type: Number, required: true },
+    orderId: { type: String, required: true },
     credits: { type: Number, required: true },
     isPaid: { type: Boolean, default: false },
   },
