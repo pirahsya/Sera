@@ -114,6 +114,12 @@ export const AppContextProvider = ({ children }) => {
     setSelectedChat,
     theme,
     setTheme,
+    createNewChat,
+    loadingUser,
+    fetchUsersChats,
+    token,
+    setToken,
+    axios,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
