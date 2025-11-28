@@ -1,12 +1,27 @@
 import React, { useEffect, useState } from "react";
 import Loading from "./Loading";
+import { useAppContext } from "../context/AppContext";
+import toast from "react-hot-toast";
 
 const Library = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { axios, token } = useAppContext();
 
   const fetchImages = async () => {
-    setImages([]);
+    try {
+      const { data } = await axios.get("/api/user/images", {
+        headers: { Authorization: token },
+      });
+
+      if (data.success) {
+        setImages(data.images);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
     setLoading(false);
   };
 
