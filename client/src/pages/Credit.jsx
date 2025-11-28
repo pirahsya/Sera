@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Loading from "./Loading";
-import { dummyPlans } from "../assets/assets";
+import { Plans } from "../assets/assets";
 
 const formatRupiah = (number) => {
   return new Intl.NumberFormat("id-ID", {
@@ -18,7 +18,7 @@ const Credit = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchPlans = async () => {
-    setPlans(dummyPlans);
+    setPlans(Plans);
     setLoading(false);
   };
 
@@ -39,7 +39,7 @@ const Credit = () => {
           <div
             key={plan._id}
             className={`border border-gray-200 dark:border-[#1A2260] rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-w-[300px] flex flex-col ${
-              plan._id === "pro"
+              plan._id === "plus"
                 ? "bg-[#E3E6FF] dark:bg-[#121548]"
                 : "bg-white dark:bg-transparent"
             }`}
