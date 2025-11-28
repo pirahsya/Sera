@@ -7,10 +7,14 @@ const Loading = () => {
   const { fetchUser } = useAppContext();
 
   useEffect(() => {
+    if (location.search) {
+      navigate("/memuat", { replace: true });
+    }
+
     const timeout = setTimeout(() => {
       fetchUser();
       navigate("/");
-    }, 8000);
+    }, 4000);
     return () => clearTimeout(timeout);
   }, []);
 

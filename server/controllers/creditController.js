@@ -79,10 +79,15 @@ export const purchasePlan = async (req, res) => {
       clientKey: process.env.MIDTRANS_CLIENT_KEY,
     });
 
+    const { origin } = req.headers;
+
     const parameter = {
       transaction_details: {
         order_id: orderId,
         gross_amount: plan.price,
+      },
+      callbacks: {
+        finish: `${origin}/memuat`,
       },
     };
 
