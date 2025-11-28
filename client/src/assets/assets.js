@@ -2,7 +2,7 @@ export const dummyPlans = [
   {
     _id: "basic",
     name: "Dasar",
-    price: 149_900,
+    price: 149000,
     credits: 100,
     features: [
       "Ringan & mudah digunakan",
@@ -12,9 +12,9 @@ export const dummyPlans = [
     ],
   },
   {
-    _id: "pro",
-    name: "Pro",
-    price: 279_900,
+    _id: "plus",
+    name: "Plus",
+    price: 279000,
     credits: 500,
     features: [
       "Paket terpopuler",
@@ -24,9 +24,9 @@ export const dummyPlans = [
     ],
   },
   {
-    _id: "premium",
-    name: "Premium",
-    price: 449_900,
+    _id: "pro",
+    name: "Pro",
+    price: 449000,
     credits: 1000,
     features: [
       "Maksimalkan produktivitas",

@@ -15,8 +15,8 @@ const plans = [
     ],
   },
   {
-    _id: "pro",
-    name: "Pro",
+    _id: "plus",
+    name: "Plus",
     price: 279900,
     credits: 500,
     features: [
@@ -27,8 +27,8 @@ const plans = [
     ],
   },
   {
-    _id: "premium",
-    name: "Premium",
+    _id: "pro",
+    name: "Pro",
     price: 449900,
     credits: 1000,
     features: [
