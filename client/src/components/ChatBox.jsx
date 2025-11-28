@@ -2,19 +2,64 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import Message from "./Message";
 import { SendHorizontal, Square } from "lucide-react";
+import toast from "react-hot-toast";
 
 const ChatBox = () => {
   const containerRef = useRef(null);
 
-  const { selectedChat, theme } = useAppContext();
+  const { selectedChat, theme, user, axios, token, setUser } = useAppContext();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [prompt, setPrompt] = useState("");
+  const [mode, setMode] = useState("text");
 
   const onSubmit = async (e) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
+      if (!user) return toast.error("Silakan masuk terlebih dahulu");
+      setLoading(true);
+      const promptCopy = prompt;
+      setPrompt("");
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "user",
+          content: prompt,
+          timestamp: Date.now(),
+          isImage: false,
+        },
+      ]);
+      const { data } = await axios.post(
+        `/api/message/${mode}`,
+        {
+          chatId: selectedChat._id,
+          prompt,
+        },
+        {
+          headers: { Authorization: token },
+        }
+      );
+
+      if (data.success) {
+        setMessages((prev) => [...prev, data.reply]);
+
+        if (mode === "image") {
+          setUser((prev) => ({ ...prev, credits: prev.credits - 2 }));
+        } else {
+          setUser((prev) => ({ ...prev, credits: prev.credits - 1 }));
+        }
+      } else {
+        toast.error(data.message);
+        setPrompt(promptCopy);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setPrompt("");
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
