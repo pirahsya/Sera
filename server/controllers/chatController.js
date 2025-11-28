@@ -8,13 +8,13 @@ export const createChat = async (req, res) => {
     const chatData = {
       userId,
       messages: [],
-      name: "New Chat",
+      name: "Obrolan baru",
       userName: req.user.name,
     };
 
     await Chat.create(chatData);
 
-    res.json({ success: true, message: "" });
+    res.json({ success: true, message: "Obrolan berhasil dibuat" });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -42,7 +42,7 @@ export const deleteChat = async (req, res) => {
 
     await Chat.deleteOne({ _id: chatId, userId });
 
-    res.json({ success: true, message: "" });
+    res.json({ success: true, message: "Obrolan berhasil dihapus" });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
