@@ -12,11 +12,53 @@ import {
   LogOut,
   X,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
-  const { chats, setSelectedChat, theme, setTheme, user, navigate } =
-    useAppContext();
+  const {
+    chats,
+    setSelectedChat,
+    theme,
+    setTheme,
+    user,
+    navigate,
+    createNewChat,
+    axios,
+    setChats,
+    fetchUsersChats,
+    setToken,
+    token,
+  } = useAppContext();
   const [search, setSearch] = useState("");
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+  };
+
+  const deleteChat = async (e, chatId) => {
+    try {
+      e.stopPropagation();
+      const confirm = window.confirm(
+        "Apakah Anda yakin ingin menhapus obrolan ini?"
+      );
+      if (!confirm) return;
+      const { data } = await axios.post(
+        "/api/chat/delete",
+        { chatId },
+        {
+          headers: { Authorization: token },
+        }
+      );
+      if (data.success) {
+        setChats((prev) => prev.filter((chat) => chat._id !== chatId));
+        await fetchUsersChats();
+        toast.success(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div
@@ -27,12 +69,14 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
       {/* Logo */}
       <img
         // src={theme === "dark" ? assets.logo_full : assets.logo_full_dark}
-        alt=""
         className="w-full max-w-48"
       />
 
       {/* New Chat Button */}
-      <button className="flex justify-center items-center w-full py-2 mt-10 text-white bg-linear-to-r from-[#7C55F0] to-[#3D81F6] text-sm rounded-md cursor-pointer">
+      <button
+        onClick={createNewChat}
+        className="flex justify-center items-center w-full py-2 mt-10 text-white bg-linear-to-r from-[#7C55F0] to-[#3D81F6] text-sm rounded-md cursor-pointer"
+      >
         <span className="mr-2 text-xl">+</span> Obrolan baru
       </button>
 
@@ -50,14 +94,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
 
       {/* Recent Chats */}
       {chats.length > 0 && <p className="mt-4 text-sm">Obrolan terbaru</p>}
-      <div
-        onClick={() => {
-          navigate("/");
-          setSelectedChat(chat);
-          setIsMenuOpen(false);
-        }}
-        className="flex-1 overflow-y-scroll mt-3 text-sm space-y-3"
-      >
+      <div className="flex-1 overflow-y-scroll mt-3 text-sm space-y-3">
         {chats
           .filter((chat) =>
             chat.messages[0]
@@ -68,20 +105,25 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
           )
           .map((chat) => (
             <div
+              onClick={() => {
+                navigate("/");
+                setSelectedChat(chat);
+                setIsMenuOpen(false);
+              }}
               key={chat.id}
               className="p-2 px-4 dark:bg-[#241E80]/10 border border-gray-300 dark:border-[#1E1980]/15 rounded-md cursor-pointer flex justify-between group"
             >
-              <div>
-                <p className="truncate w-full">
-                  {chat.messages.length > 0
-                    ? chat.messages[0].content.slice(0, 32)
-                    : chat.name}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-[#B1A6C0]">
-                  {chat.updatedAt}
-                </p>
-              </div>
+              <p className="truncate w-full">
+                {chat.messages.length > 0
+                  ? chat.messages[0].content.slice(0, 32)
+                  : chat.name}
+              </p>
               <Trash2
+                onClick={(e) =>
+                  toast.promise(deleteChat(e, chat._id), {
+                    loading: "Menghapus obrolan...",
+                  })
+                }
                 size={16}
                 className="hidden group-hover:block text-gray-600 dark:text-white cursor-pointer"
               />
@@ -143,11 +185,12 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
       {/* User Account */}
       <div className="flex items-center gap-3 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md cursor-pointer group">
         <CircleUser size={24} className="text-gray-600 dark:text-white" />
-        <p className="flex-1 text-sm dark:text-primary truncate">
+        <p className="flex-1 text-sm truncate">
           {user ? user.name : "Masuk ke akun Anda"}
         </p>
         {user && (
           <LogOut
+            onClick={logout}
             size={18}
             className="hidden group-hover:block text-gray-600 dark:text-white cursor-pointer"
           />
