@@ -5,7 +5,7 @@ const ChatSchema = new mongoose.Schema(
     userId: { type: String, required: true },
     userName: { type: String, required: true },
     name: { type: String, required: true },
-    message: [
+    messages: [
       {
         isImage: { type: Boolean, required: true },
         role: { type: String, required: true },
