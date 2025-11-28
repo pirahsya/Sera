@@ -3,9 +3,9 @@ import Transaction from "../models/Transaction.js";
 
 const plans = [
   {
-    _id: "basic",
-    name: "Dasar",
-    price: 149900,
+    _id: "go",
+    name: "Go",
+    price: 149000,
     credits: 100,
     features: [
       "Ringan & mudah digunakan",
@@ -17,7 +17,7 @@ const plans = [
   {
     _id: "plus",
     name: "Plus",
-    price: 279900,
+    price: 279000,
     credits: 500,
     features: [
       "Paket terpopuler",
@@ -29,7 +29,7 @@ const plans = [
   {
     _id: "pro",
     name: "Pro",
-    price: 449900,
+    price: 449000,
     credits: 1000,
     features: [
       "Maksimalkan produktivitas",
@@ -91,7 +91,7 @@ export const purchasePlan = async (req, res) => {
     res.json({
       success: true,
       snapToken: midtrans.token,
-      redirectUrl: midtrans.redirect_url,
+      url: midtrans.redirect_url,
       transactionId: transaction._id,
     });
   } catch (error) {

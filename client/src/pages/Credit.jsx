@@ -1,25 +1,46 @@
 import React, { useEffect, useState } from "react";
 import Loading from "./Loading";
-import { Plans } from "../assets/assets";
-
-const formatRupiah = (number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })
-    .format(number)
-    .replace(/\s/g, "");
-};
+import { useAppContext } from "../context/AppContext";
+import toast from "react-hot-toast";
 
 const Credit = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { axios, token } = useAppContext();
 
   const fetchPlans = async () => {
-    setPlans(Plans);
+    try {
+      const { data } = await axios.get("/api/credit/plan", {
+        headers: { Authorization: token },
+      });
+
+      if (data.success) {
+        setPlans(data.plans);
+      } else {
+        toast.error(data.message || "Gagal mengambil data paket kredit");
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
     setLoading(false);
+  };
+
+  const purchasePlan = async (planId) => {
+    try {
+      const { data } = await axios.post(
+        "/api/credit/purchase",
+        { planId },
+        { headers: { Authorization: token } }
+      );
+
+      if (data.success) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   useEffect(() => {
@@ -49,7 +70,7 @@ const Credit = () => {
                 {plan.name}
               </h3>
               <p className="text-2xl font-bold text-[#241E80] dark:text-[#A3B6FF] mb-4">
-                {formatRupiah(plan.price)}
+                Rp{plan.price.toLocaleString("id-ID")}
                 <span className="text-base font-normal text-gray-600 dark:text-[#BFC9FF]">
                   {" "}
                   / {plan.credits} kredit
@@ -61,7 +82,14 @@ const Credit = () => {
                 ))}
               </ul>
             </div>
-            <button className="mt-6 bg-[#241E80] hover:bg-[#1A2260] active:bg-[#151A50] text-white font-medium py-2 rounded transition-colors cursor-pointer">
+            <button
+              onClick={() =>
+                toast.promise(purchasePlan(plan._id), {
+                  loading: "Memproses pembayaran...",
+                })
+              }
+              className="mt-6 bg-[#241E80] hover:bg-[#1A2260] active:bg-[#151A50] text-white font-medium py-2 rounded transition-colors cursor-pointer"
+            >
               Beli Sekarang
             </button>
           </div>
