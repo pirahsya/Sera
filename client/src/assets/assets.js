@@ -1,4 +1,4 @@
-export const dummyPlans = [
+export const Plans = [
   {
     _id: "basic",
     name: "Dasar",
