@@ -7,12 +7,11 @@ import toast from "react-hot-toast";
 const ChatBox = () => {
   const containerRef = useRef(null);
 
-  const { selectedChat, user, axios, token, setUser } = useAppContext();
+  const { selectedChat, user, axios, token, fetchUser } = useAppContext();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
-  const mode = "text";
 
   const onSubmit = async (e) => {
     try {
@@ -31,7 +30,7 @@ const ChatBox = () => {
         },
       ]);
       const { data } = await axios.post(
-        `/api/message/${mode}`,
+        `/api/message`,
         {
           chatId: selectedChat._id,
           prompt,
@@ -43,12 +42,7 @@ const ChatBox = () => {
 
       if (data.success) {
         setMessages((prev) => [...prev, data.reply]);
-
-        if (mode === "image") {
-          setUser((prev) => ({ ...prev, credits: prev.credits - 2 }));
-        } else {
-          setUser((prev) => ({ ...prev, credits: prev.credits - 1 }));
-        }
+        await fetchUser();
       } else {
         toast.error(data.message);
         setPrompt(promptCopy);

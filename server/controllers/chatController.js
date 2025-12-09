@@ -8,7 +8,7 @@ export const createChat = async (req, res) => {
     const chatData = {
       userId,
       messages: [],
-      name: "Obrolan baru",
+      name: "",
       userName: req.user.name,
     };
 
@@ -23,9 +23,9 @@ export const createChat = async (req, res) => {
 // API to get all chats
 export const getChats = async (req, res) => {
   try {
-    const userId = req.user._id;
-
-    const chats = await Chat.find({ userId }).sort({ updatedAt: -1 });
+    const chats = await Chat.find({ userId: req.user._id })
+      .select("_id name messages updatedAt")
+      .sort({ updatedAt: -1 });
 
     res.json({ success: true, chats });
   } catch (error) {

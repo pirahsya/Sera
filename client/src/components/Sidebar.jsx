@@ -114,9 +114,11 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
               className="p-2 px-4 dark:bg-[#241E80]/10 border border-gray-300 dark:border-[#1E1980]/15 rounded-md cursor-pointer flex justify-between group"
             >
               <p className="truncate w-full">
-                {chat.messages.length > 0
-                  ? chat.messages[0].content.slice(0, 32)
-                  : chat.name}
+                {chat.name?.trim()
+                  ? chat.name.slice(0, 40)
+                  : chat.messages[0]?.content
+                  ? chat.messages[0].content.slice(0, 40)
+                  : "Obrolan baru"}
               </p>
               <Trash2
                 onClick={(e) =>
