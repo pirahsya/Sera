@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import Markdown from "react-markdown";
 import Prism from "prismjs";
 

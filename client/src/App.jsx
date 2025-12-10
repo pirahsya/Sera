@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import { Route, Routes, useLocation } from "react-router-dom";
 import ChatBox from "./components/ChatBox";
@@ -22,7 +22,7 @@ const App = () => {
   return (
     <>
       <Toaster />
-      {!isMenuOpen && (
+      {user && !isMenuOpen && (
         <Menu
           onClick={() => setIsMenuOpen(true)}
           size={20}
@@ -36,6 +36,7 @@ const App = () => {
             <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
             <Routes>
               <Route path="/" element={<ChatBox />} />
+              <Route path="/c/:chatId" element={<ChatBox />} />
               <Route path="/kredit" element={<Credit />} />
               <Route path="/perpustakaan" element={<Library />} />
             </Routes>

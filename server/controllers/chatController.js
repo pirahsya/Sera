@@ -12,9 +12,9 @@ export const createChat = async (req, res) => {
       userName: req.user.name,
     };
 
-    await Chat.create(chatData);
+    const chat = await Chat.create(chatData);
 
-    res.json({ success: true, message: "Obrolan berhasil dibuat" });
+    res.json({ success: true, message: "Obrolan berhasil dibuat", chat });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -28,6 +28,24 @@ export const getChats = async (req, res) => {
       .sort({ updatedAt: -1 });
 
     res.json({ success: true, chats });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// API to get a specific chat
+export const getChat = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { id } = req.params;
+
+    const chat = await Chat.findOne({ _id: id, userId });
+
+    if (!chat) {
+      return res.json({ success: false, message: "Chat tidak ditemukan" });
+    }
+
+    res.json({ success: true, chat });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }

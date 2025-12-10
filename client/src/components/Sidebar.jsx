@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAppContext } from "../context/AppContext";
-// import { assets } from "../assets";
 import {
   Search,
   Trash2,
@@ -17,7 +16,6 @@ import toast from "react-hot-toast";
 const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
   const {
     chats,
-    setSelectedChat,
     theme,
     setTheme,
     user,
@@ -29,6 +27,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
     setToken,
     token,
   } = useAppContext();
+
   const [search, setSearch] = useState("");
 
   const logout = () => {
@@ -43,13 +42,13 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
         "Apakah Anda yakin ingin menhapus obrolan ini?"
       );
       if (!confirm) return;
+
       const { data } = await axios.post(
         "/api/chat/delete",
         { chatId },
-        {
-          headers: { Authorization: token },
-        }
+        { headers: { Authorization: token } }
       );
+
       if (data.success) {
         setChats((prev) => prev.filter((chat) => chat._id !== chatId));
         await fetchUsersChats();
@@ -66,13 +65,8 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
         !isMenuOpen && "max-md:-translate-x-full"
       }`}
     >
-      {/* Logo */}
-      <img
-        // src={theme === "dark" ? assets.logo_full : assets.logo_full_dark}
-        className="w-full max-w-48"
-      />
+      <img className="w-full max-w-48" />
 
-      {/* New Chat Button */}
       <button
         onClick={createNewChat}
         className="flex justify-center items-center w-full py-2 mt-10 text-white bg-linear-to-r from-[#7C55F0] to-[#3D81F6] text-sm rounded-md cursor-pointer"
@@ -80,7 +74,6 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
         <span className="mr-2 text-xl">+</span> Obrolan baru
       </button>
 
-      {/* Search Conversations */}
       <div className="flex items-center gap-2 p-3 mt-4 border border-gray-400 dark:border-white/20 rounded-md">
         <Search size={16} className="text-gray-600 dark:text-white" />
         <input
@@ -92,25 +85,24 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
         />
       </div>
 
-      {/* Recent Chats */}
       {chats.length > 0 && <p className="mt-4 text-sm">Obrolan terbaru</p>}
+
       <div className="flex-1 overflow-y-scroll mt-3 text-sm space-y-3">
         {chats
           .filter((chat) =>
             chat.messages[0]
-              ? chat.messages[0]?.content
+              ? chat.messages[0].content
                   .toLowerCase()
                   .includes(search.toLowerCase())
               : chat.name.toLowerCase().includes(search.toLowerCase())
           )
           .map((chat) => (
             <div
+              key={chat._id}
               onClick={() => {
-                navigate("/");
-                setSelectedChat(chat);
+                navigate(`/c/${chat._id}`);
                 setIsMenuOpen(false);
               }}
-              key={chat.id}
               className="p-2 px-4 dark:bg-[#241E80]/10 border border-gray-300 dark:border-[#1E1980]/15 rounded-md cursor-pointer flex justify-between group"
             >
               <p className="truncate w-full">
@@ -120,6 +112,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
                   ? chat.messages[0].content.slice(0, 40)
                   : "Obrolan baru"}
               </p>
+
               <Trash2
                 onClick={(e) =>
                   toast.promise(deleteChat(e, chat._id), {
@@ -133,7 +126,6 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
           ))}
       </div>
 
-      {/* Library */}
       <div
         onClick={() => {
           navigate("/perpustakaan");
@@ -147,7 +139,6 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
         </div>
       </div>
 
-      {/* Credit Purchase Option */}
       <div
         onClick={() => {
           navigate("/kredit");
@@ -162,7 +153,6 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
         </div>
       </div>
 
-      {/* Dark Mode Toggle */}
       <div className="flex items-center justify-between gap-2 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md">
         <div className="flex items-center gap-2 text-sm">
           {theme === "dark" ? (
@@ -172,6 +162,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
           )}
           <p>Dark Mode</p>
         </div>
+
         <label className="relative inline-flex cursor-pointer">
           <input
             onChange={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -184,7 +175,6 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
         </label>
       </div>
 
-      {/* User Account */}
       <div className="flex items-center gap-3 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md cursor-pointer group">
         <CircleUser size={24} className="text-gray-600 dark:text-white" />
         <p className="flex-1 text-sm truncate">

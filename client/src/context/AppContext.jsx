@@ -11,7 +11,6 @@ export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [chats, setChats] = useState([]);
-  const [selectedChat, setSelectedChat] = useState(null);
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -34,19 +33,9 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  const createNewChat = async () => {
-    try {
-      if (!user) return toast.error("");
-
-      navigate("/");
-
-      await axios.get("/api/chat/create", {
-        headers: { Authorization: token },
-      });
-      await fetchUsersChats();
-    } catch (error) {
-      toast.error(error.message);
-    }
+  const createNewChat = () => {
+    if (!user) return toast.error("");
+    navigate("/");
   };
 
   const fetchUsersChats = async () => {
@@ -57,19 +46,8 @@ export const AppContextProvider = ({ children }) => {
 
       if (data.success) {
         setChats(data.chats);
-
-        if (data.chats.length === 0) {
-          await createNewChat();
-          return fetchUsersChats();
-        } else {
-          setSelectedChat(data.chats[0]);
-        }
       } else {
         toast.error(data.message);
-      }
-
-      if (data.success) {
-        setChats(data.chats);
       }
     } catch (error) {
       toast.error(error.message);
@@ -90,7 +68,6 @@ export const AppContextProvider = ({ children }) => {
       fetchUsersChats();
     } else {
       setChats([]);
-      setSelectedChat(null);
     }
   }, [user]);
 
@@ -110,8 +87,6 @@ export const AppContextProvider = ({ children }) => {
     fetchUser,
     chats,
     setChats,
-    selectedChat,
-    setSelectedChat,
     theme,
     setTheme,
     createNewChat,

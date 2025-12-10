@@ -12,10 +12,6 @@
   --color-primary: #242180;
 }
 
-::-webkit-scrollbar {
-  display: none;
-}
-
 .reset-tw :not(pre):not(code) {
   all: revert;
 }
