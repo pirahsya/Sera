@@ -16,6 +16,8 @@ const ChatBox = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamText, setStreamText] = useState("");
 
   useEffect(() => {
     if (chatId) {
@@ -44,7 +46,9 @@ const ChatBox = () => {
     if (!text) return;
     if (!user) return toast.error("Silakan masuk terlebih dahulu");
 
-    setLoading(true);
+    setIsStreaming(true);
+    setStreamText("");
+    setLoading(false);
 
     try {
       let id = chatId;
@@ -73,17 +77,77 @@ const ChatBox = () => {
       setMessages((prev) => [...prev, userMessage]);
       setPrompt("");
 
-      const { data } = await axios.post(
-        `/api/message`,
-        { chatId: id, prompt: text },
-        { headers: { Authorization: token } }
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL}/api/message/stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+          body: JSON.stringify({ chatId: id, prompt: text }),
+        }
       );
 
-      if (!data.success) throw new Error(data.message);
+      let finalText = "";
 
-      setMessages((prev) => [...prev, data.reply]);
-      fetchUser();
-      fetchUsersChats();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let breakStreaming = false;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const decoded = decoder.decode(value, { stream: true });
+
+        const lines = decoded.split("\n\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+
+          const json = JSON.parse(line.replace("data: ", ""));
+
+          if (json.type === "chunk") {
+            setStreamText((prev) => prev + json.text);
+            finalText += json.text;
+          }
+
+          if (json.type === "done") {
+            setIsStreaming(false);
+            breakStreaming = true;
+            break;
+          }
+
+          if (json.type === "error") {
+            toast.error(json.message);
+            setIsStreaming(false);
+            breakStreaming = true;
+            break;
+          }
+        }
+
+        if (breakStreaming) break;
+      }
+
+      if (finalText.trim() !== "") {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: finalText,
+            timestamp: Date.now(),
+            isImage: false,
+          },
+        ]);
+      }
+
+      setStreamText("");
+      setIsStreaming(false);
+
+      await fetchUser();
+      await fetchUsersChats();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -101,11 +165,14 @@ const ChatBox = () => {
   }, [messages]);
 
   return (
-    <div className="flex-1 flex flex-col m-5 md:mx-0 mt-0 mb-10 max-md:mt-14">
-      <div className="flex-1 w-full overflow-y-scroll">
-        <div ref={containerRef} className="max-w-2xl mx-auto w-full">
+    <div className="flex flex-1 flex-col m-5 md:mx-0 mt-0 mb-10 max-md:mt-14">
+      <div className="flex flex-1 w-full overflow-y-scroll">
+        <div
+          ref={containerRef}
+          className="flex flex-1 flex-col max-w-2xl mx-auto w-full"
+        >
           {messages.length === 0 && (
-            <div className="h-full flex items-center justify-center text-primary">
+            <div className="flex flex-1 items-center justify-center text-primary">
               <p className="text-4xl sm:text-6xl text-center text-gray-400 dark:text-white">
                 Tanya apa saja
               </p>
@@ -116,7 +183,17 @@ const ChatBox = () => {
             <Message key={index} message={message} />
           ))}
 
-          {loading && (
+          {isStreaming && streamText && (
+            <Message
+              message={{
+                role: "assistant",
+                content: streamText,
+                isImage: false,
+              }}
+            />
+          )}
+
+          {loading && !isStreaming && (
             <div className="loader flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-white animate-bounce"></div>
               <div className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-white animate-bounce"></div>

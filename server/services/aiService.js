@@ -1,4 +1,4 @@
-import { runTextModel } from "../configs/gemini.js";
+import { runTextModel, textModel } from "../configs/gemini.js";
 
 async function classifyPrompt(prompt) {
   const instruction = `
@@ -37,8 +37,18 @@ Jawab hanya judulnya, tanpa penjelasan.
   return title.trim();
 }
 
+async function* streamText(prompt) {
+  const result = await textModel.generateContentStream(prompt);
+
+  for await (const chunk of result.stream) {
+    const text = chunk.text();
+    if (text) yield text;
+  }
+}
+
 export default {
   classifyPrompt,
   generateText,
   generateTitle,
+  streamText,
 };

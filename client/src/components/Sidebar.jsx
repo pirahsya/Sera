@@ -33,6 +33,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
+    navigate("/");
   };
 
   const deleteChat = async (e, chatId) => {
