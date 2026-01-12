@@ -1,4 +1,4 @@
-import { runTextModel, textModel } from "../configs/gemini.js";
+import { runTextModel, textModel, rotateApiKey } from "../configs/gemini.js";
 
 async function classifyPrompt(prompt) {
   const instruction = `
@@ -38,11 +38,26 @@ Jawab hanya judulnya, tanpa penjelasan.
 }
 
 async function* streamText(prompt) {
-  const result = await textModel.generateContentStream(prompt);
-
-  for await (const chunk of result.stream) {
-    const text = chunk.text();
-    if (text) yield text;
+  try {
+    const result = await textModel.generateContentStream(prompt);
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      if (text) yield text;
+    }
+  } catch (error) {
+    if (
+      error.message.includes("API_KEY_INVALID") ||
+      error.message.includes("429")
+    ) {
+      const newModel = rotateApiKey();
+      const result = await newModel.generateContentStream(prompt);
+      for await (const chunk of result.stream) {
+        const text = chunk.text();
+        if (text) yield text;
+      }
+    } else {
+      throw error;
+    }
   }
 }
 

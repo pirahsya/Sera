@@ -1,157 +1,99 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAppContext } from "../context/AppContext";
-import Message from "./Message";
 import { SendHorizontal, Square } from "lucide-react";
+import { useAppContext } from "../context/AppContext";
+import { streamAIChat } from "../services/chatService";
+import Message from "./Message";
 import toast from "react-hot-toast";
 
 const ChatBox = () => {
   const containerRef = useRef(null);
   const { chatId } = useParams();
   const navigate = useNavigate();
-
   const { chats, user, axios, token, fetchUser, fetchUsersChats } =
     useAppContext();
 
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamText, setStreamText] = useState("");
+  const [optimisticMessages, setOptimisticMessages] = useState([]);
+
+  const currentChat = useMemo(
+    () => chats.find((c) => c._id === chatId),
+    [chats, chatId]
+  );
+
+  const allMessages = useMemo(() => {
+    return [...(currentChat?.messages || []), ...optimisticMessages];
+  }, [currentChat, optimisticMessages]);
 
   useEffect(() => {
-    if (chatId) {
-      const found = chats.find((c) => c._id === chatId);
-      if (found) {
-        setMessages(found.messages || []);
-      } else {
-        axios
-          .get(`/api/chat/${chatId}`, {
-            headers: { Authorization: token },
-          })
-          .then(({ data }) => {
-            if (!data.success) return navigate("/", { replace: true });
-            setMessages(data.chat.messages || []);
-          })
-          .catch(() => navigate("/", { replace: true }));
-      }
-    } else {
-      setMessages([]);
+    if (chatId && !currentChat) {
+      axios
+        .get(`/api/chat/${chatId}`, { headers: { Authorization: token } })
+        .then(({ data }) => {
+          if (!data.success) return navigate("/", { replace: true });
+          fetchUsersChats();
+        })
+        .catch(() => navigate("/", { replace: true }));
     }
-  }, [chatId, chats]);
+  }, [chatId, currentChat, axios, navigate, token, fetchUsersChats]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
     const text = prompt.trim();
-    if (!text) return;
-    if (!user) return toast.error("Silakan masuk terlebih dahulu");
+    if (!text || !user) return;
 
     setIsStreaming(true);
     setStreamText("");
-    setLoading(false);
+    setPrompt("");
+
+    const userMessage = {
+      role: "user",
+      content: text,
+      timestamp: Date.now(),
+      isImage: false,
+    };
+
+    setOptimisticMessages((prev) => [...prev, userMessage]);
 
     try {
-      let id = chatId;
+      let currentId = chatId;
 
-      if (!id) {
+      if (!currentId) {
         const { data } = await axios.get("/api/chat/create", {
           headers: { Authorization: token },
         });
 
-        if (!data.success || !data.chat) throw new Error("Gagal membuat chat");
+        if (!data.success || !data.chat) {
+          throw new Error(data.message || "Gagal membuat obrolan baru");
+        }
 
-        id = data.chat._id;
-
+        currentId = data.chat._id;
         await fetchUsersChats();
-
-        navigate(`/c/${id}`, { replace: true });
+        navigate(`/c/${currentId}`, { replace: true });
       }
 
-      const userMessage = {
-        role: "user",
-        content: text,
-        timestamp: Date.now(),
-        isImage: false,
-      };
-
-      setMessages((prev) => [...prev, userMessage]);
-      setPrompt("");
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SERVER_URL}/api/message/stream`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          body: JSON.stringify({ chatId: id, prompt: text }),
-        }
-      );
-
-      let finalText = "";
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      let breakStreaming = false;
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const decoded = decoder.decode(value, { stream: true });
-
-        const lines = decoded.split("\n\n");
-
-        for (const line of lines) {
-          if (!line.startsWith("data:")) continue;
-
-          const json = JSON.parse(line.replace("data: ", ""));
-
-          if (json.type === "chunk") {
-            setStreamText((prev) => prev + json.text);
-            finalText += json.text;
-          }
-
-          if (json.type === "done") {
-            setIsStreaming(false);
-            breakStreaming = true;
-            break;
-          }
-
-          if (json.type === "error") {
-            toast.error(json.message);
-            setIsStreaming(false);
-            breakStreaming = true;
-            break;
-          }
-        }
-
-        if (breakStreaming) break;
-      }
-
-      if (finalText.trim() !== "") {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: finalText,
-            timestamp: Date.now(),
-            isImage: false,
-          },
-        ]);
-      }
-
-      setStreamText("");
-      setIsStreaming(false);
-
-      await fetchUser();
-      await fetchUsersChats();
+      await streamAIChat({
+        chatId: currentId,
+        prompt: text,
+        token,
+        onChunk: (chunk) => setStreamText((prev) => prev + chunk),
+        onDone: async () => {
+          setIsStreaming(false);
+          setStreamText("");
+          setOptimisticMessages([]);
+          await fetchUsersChats();
+          await fetchUser();
+        },
+        onError: (err) => {
+          toast.error(err);
+          setIsStreaming(false);
+        },
+      });
     } catch (err) {
       toast.error(err.message);
-    } finally {
-      setLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -162,16 +104,19 @@ const ChatBox = () => {
         behavior: "smooth",
       });
     }
-  }, [messages]);
+  }, [allMessages, streamText]);
 
   return (
-    <div className="flex flex-1 flex-col m-5 md:mx-0 mt-0 mb-10 max-md:mt-14">
+    <div
+      key={chatId}
+      className="flex flex-1 flex-col m-5 md:mx-0 mt-0 mb-10 max-md:mt-14"
+    >
       <div className="flex flex-1 w-full overflow-y-scroll">
         <div
           ref={containerRef}
           className="flex flex-1 flex-col max-w-2xl mx-auto w-full"
         >
-          {messages.length === 0 && (
+          {allMessages.length === 0 && !isStreaming && (
             <div className="flex flex-1 items-center justify-center text-primary">
               <p className="text-4xl sm:text-6xl text-center text-gray-400 dark:text-white">
                 Tanya apa saja
@@ -179,7 +124,7 @@ const ChatBox = () => {
             </div>
           )}
 
-          {messages.map((message, index) => (
+          {allMessages.map((message, index) => (
             <Message key={index} message={message} />
           ))}
 
@@ -193,8 +138,8 @@ const ChatBox = () => {
             />
           )}
 
-          {loading && !isStreaming && (
-            <div className="loader flex items-center gap-1.5">
+          {isStreaming && !streamText && (
+            <div className="loader flex items-center gap-1.5 ml-2 mt-4">
               <div className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-white animate-bounce"></div>
               <div className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-white animate-bounce"></div>
               <div className="w-1.5 h-1.5 rounded-full bg-gray-500 dark:bg-white animate-bounce"></div>
@@ -211,14 +156,14 @@ const ChatBox = () => {
           onChange={(e) => setPrompt(e.target.value)}
           value={prompt}
           type="text"
-          className="flex-1 w-full text-sm outline-none"
+          className="flex-1 w-full text-sm outline-none bg-transparent"
           required
         />
         <button
-          disabled={loading}
-          className="cursor-pointer text-gray-600 dark:text-white"
+          disabled={isStreaming}
+          className="cursor-pointer text-gray-600 dark:text-white disabled:opacity-50"
         >
-          {loading ? <Square size={20} /> : <SendHorizontal size={20} />}
+          {isStreaming ? <Square size={20} /> : <SendHorizontal size={20} />}
         </button>
       </form>
     </div>

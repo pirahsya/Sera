@@ -1,6 +1,5 @@
 import Chat from "../models/Chat.js";
 
-// API to create a new chat
 export const createChat = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -20,7 +19,6 @@ export const createChat = async (req, res) => {
   }
 };
 
-// API to get all chats
 export const getChats = async (req, res) => {
   try {
     const chats = await Chat.find({ userId: req.user._id })
@@ -33,7 +31,6 @@ export const getChats = async (req, res) => {
   }
 };
 
-// API to get a specific chat
 export const getChat = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -51,7 +48,6 @@ export const getChat = async (req, res) => {
   }
 };
 
-// API to delete a chat
 export const deleteChat = async (req, res) => {
   try {
     const userId = req.user._id;
