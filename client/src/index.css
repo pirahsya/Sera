@@ -4,22 +4,43 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-* {
-  font-family: "Inter", sans-serif;
-}
-
 @theme {
-  --color-primary: #242180;
+  --font-sans: "Inter", system-ui, sans-serif;
 }
-
-.reset-tw :not(pre):not(code) {
-  all: revert;
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+  .reset-tw :not(pre):not(code) {
+    all: revert;
+  }
 }
-
-.loader div:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.loader div:nth-last-child(3) {
-  animation-delay: 0.4s;
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 10px;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #374151;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

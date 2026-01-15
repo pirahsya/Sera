@@ -37,7 +37,6 @@ async function handleMessage(user, { chatId, prompt }) {
     };
 
     chat.messages.push(reply);
-
     await chat.save();
     await User.updateOne({ _id: user._id }, { $inc: { credits: -1 } });
 
@@ -76,7 +75,6 @@ async function handleMessage(user, { chatId, prompt }) {
     };
 
     chat.messages.push(reply);
-
     await chat.save();
     await User.updateOne({ _id: user._id }, { $inc: { credits: -2 } });
 
@@ -110,21 +108,14 @@ async function streamMessage(user, { chatId, prompt }, res) {
 
   const mode = await aiService.classifyPrompt(prompt);
 
-  if (mode === "TEXT" && user.credits < 1) {
+  const requiredCredits = mode === "IMAGE" ? 2 : 1;
+  if (user.credits < requiredCredits) {
     res.write(
       `data: ${JSON.stringify({
         type: "error",
-        message: "Kredit Anda tidak mencukupi untuk mengirim pesan teks.",
-      })}\n\n`
-    );
-    return res.end();
-  }
-
-  if (mode === "IMAGE" && user.credits < 2) {
-    res.write(
-      `data: ${JSON.stringify({
-        type: "error",
-        message: "Kredit Anda tidak mencukupi untuk membuat gambar.",
+        message: `Kredit tidak mencukupi untuk ${
+          mode === "IMAGE" ? "membuat gambar" : "pesan teks"
+        }.`,
       })}\n\n`
     );
     return res.end();
@@ -136,58 +127,78 @@ async function streamMessage(user, { chatId, prompt }, res) {
     timestamp: Date.now(),
     isImage: false,
   });
-  await chat.save();
-
   if (!chat.name || chat.name.trim() === "") {
     chat.name = await aiService.generateTitle(prompt);
-    await chat.save();
   }
+  await chat.save();
 
-  if (mode === "TEXT") {
-    let finalText = "";
-
-    try {
+  try {
+    if (mode === "TEXT") {
+      let finalText = "";
       for await (const chunk of aiService.streamText(prompt)) {
         finalText += chunk;
-
         res.write(
-          `data: ${JSON.stringify({
-            type: "chunk",
-            text: chunk,
-          })}\n\n`
+          `data: ${JSON.stringify({ type: "chunk", text: chunk })}\n\n`
         );
       }
-
       chat.messages.push({
         role: "assistant",
         content: finalText,
         timestamp: Date.now(),
         isImage: false,
       });
-
       await chat.save();
       await User.updateOne({ _id: user._id }, { $inc: { credits: -1 } });
-
       res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
-      return res.end();
-    } catch (err) {
+    } else if (mode === "IMAGE") {
+      const encodedPrompt = encodeURIComponent(prompt);
+      const generatedImageUrl = `${
+        process.env.IMAGEKIT_URL_ENDPOINT
+      }/ik-genimg-prompt-${encodedPrompt}/sera/${Date.now()}.png?tr=w-800,h-800`;
+
+      const aiImageResponse = await axios.get(generatedImageUrl, {
+        responseType: "arraybuffer",
+      });
+      const base64Image = `data:image/png;base64,${Buffer.from(
+        aiImageResponse.data,
+        "binary"
+      ).toString("base64")}`;
+
+      const uploadResponse = await imagekit.upload({
+        file: base64Image,
+        fileName: `${Date.now()}.png`,
+        folder: "sera",
+      });
+
+      chat.messages.push({
+        role: "assistant",
+        content: uploadResponse.url,
+        timestamp: Date.now(),
+        isImage: true,
+      });
+      await chat.save();
+      await User.updateOne({ _id: user._id }, { $inc: { credits: -2 } });
+
       res.write(
         `data: ${JSON.stringify({
-          type: "error",
-          message: err.message || "AI streaming error",
+          type: "chunk",
+          text: uploadResponse.url,
+          isImage: true,
         })}\n\n`
       );
-      return res.end();
+      res.write(`data: ${JSON.stringify({ type: "done" })}\n\n`);
     }
-  }
 
-  res.write(
-    `data: ${JSON.stringify({
-      type: "error",
-      message: "Streaming hanya untuk jawaban teks.",
-    })}\n\n`
-  );
-  return res.end();
+    return res.end();
+  } catch (err) {
+    res.write(
+      `data: ${JSON.stringify({
+        type: "error",
+        message: err.message || "Gagal memproses permintaan.",
+      })}\n\n`
+    );
+    return res.end();
+  }
 }
 
 export default { handleMessage, streamMessage };

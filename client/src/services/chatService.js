@@ -41,7 +41,7 @@ export const streamAIChat = async ({
 
         if (json.type === "chunk") {
           finalText += json.text;
-          onChunk(json.text);
+          onChunk(json.text, json.isImage);
         } else if (json.type === "done") {
           onDone(finalText);
           return;

@@ -8,26 +8,32 @@ const Message = ({ message }) => {
   }, [message.content]);
 
   return (
-    <div>
+    <div className="w-full flex flex-col animate-in fade-in duration-500">
       {message.role === "user" ? (
-        <div className="flex justify-end my-4 gap-2">
-          <div className="flex flex-col gap-2 p-2 px-4 bg-slate-50 dark:bg-[#241E80] border border-[#1E1980]/30 rounded-md max-w-2xl">
-            <p className="text-sm">{message.content}</p>
+        <div className="flex justify-end my-2">
+          <div className="max-w-[85%] md:max-w-2xl p-3 px-5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-3xl rounded-tr-sm overflow-hidden">
+            <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed wrap-break-word">
+              {message.content}
+            </p>
           </div>
         </div>
       ) : (
-        <div className="inline-flex flex-col gap-2 p-2 px-4 max-w-2xl bg-primary/5 dark:bg-[#241E80]/30 border border-[#1E1980]/2 0 rounded-md my-4">
-          {message.isImage ? (
-            <img
-              src={message.content}
-              alt=""
-              className="w-full max-w-md mt-2 rounded-md"
-            />
-          ) : (
-            <div className="text-sm reset-tw">
-              <Markdown>{message.content}</Markdown>
-            </div>
-          )}
+        <div className="flex justify-start my-2">
+          <div className="max-w-[95%] md:max-w-3xl p-3 px-5 bg-transparent border border-transparent rounded-3xl rounded-tl-sm overflow-hidden">
+            {message.isImage ? (
+              <div className="space-y-3">
+                <img
+                  src={message.content}
+                  alt="AI Generated"
+                  className="w-full max-w-lg rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 transition-transform hover:scale-[1.02]"
+                />
+              </div>
+            ) : (
+              <div className="text-sm prose dark:prose-invert prose-slate max-w-none leading-relaxed text-gray-700 dark:text-gray-300 reset-tw wrap-break-word">
+                <Markdown>{message.content}</Markdown>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

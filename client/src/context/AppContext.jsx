@@ -1,26 +1,40 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { AppContext } from "./ChatContext";
 
 axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
-
-const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [chats, setChats] = useState([]);
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  const fetchUser = async () => {
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved;
+
+    const osTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+    localStorage.setItem("theme", osTheme);
+    return osTheme;
+  });
+
+  const toggleTheme = (newTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+  };
+
+  const fetchUser = useCallback(async () => {
+    if (!token) return;
     try {
       const { data } = await axios.get("/api/user/data", {
         headers: { Authorization: token },
       });
-
       if (data.success) {
         setUser(data.user);
       } else {
@@ -31,19 +45,14 @@ export const AppContextProvider = ({ children }) => {
     } finally {
       setLoadingUser(false);
     }
-  };
+  }, [token]);
 
-  const createNewChat = () => {
-    if (!user) return toast.error("");
-    navigate("/");
-  };
-
-  const fetchUsersChats = async () => {
+  const fetchUsersChats = useCallback(async () => {
+    if (!token) return;
     try {
       const { data } = await axios.get("/api/chat/get", {
         headers: { Authorization: token },
       });
-
       if (data.success) {
         setChats(data.chats);
       } else {
@@ -52,16 +61,45 @@ export const AppContextProvider = ({ children }) => {
     } catch (error) {
       toast.error(error.message);
     }
+  }, [token]);
+
+  const createNewChat = () => {
+    if (!user) return toast.error("Silakan masuk terlebih dahulu");
+    navigate("/");
   };
 
   useEffect(() => {
+    const root = window.document.documentElement;
     if (theme === "dark") {
-      document.documentElement.classList.add("dark");
+      root.classList.add("dark");
     } else {
-      document.documentElement.classList.remove("dark");
+      root.classList.remove("dark");
     }
-    localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleThemeChange = (e) => {
+      if (!localStorage.getItem("theme")) {
+        const newTheme = e.matches ? "dark" : "light";
+        toggleTheme(newTheme);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleThemeChange);
+    return () => mediaQuery.removeEventListener("change", handleThemeChange);
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      fetchUser();
+      localStorage.setItem("token", token);
+    } else {
+      setUser(null);
+      setLoadingUser(false);
+      localStorage.removeItem("token");
+    }
+  }, [token, fetchUser]);
 
   useEffect(() => {
     if (user) {
@@ -69,35 +107,24 @@ export const AppContextProvider = ({ children }) => {
     } else {
       setChats([]);
     }
-  }, [user]);
-
-  useEffect(() => {
-    if (token) {
-      fetchUser();
-    } else {
-      setUser(null);
-      setLoadingUser(false);
-    }
-  }, [token]);
+  }, [user, fetchUsersChats]);
 
   const value = {
-    navigate,
     user,
     setUser,
-    fetchUser,
+    token,
+    setToken,
     chats,
     setChats,
     theme,
-    setTheme,
-    createNewChat,
+    setTheme: toggleTheme,
     loadingUser,
-    fetchUsersChats,
-    token,
-    setToken,
     axios,
+    navigate,
+    fetchUser,
+    fetchUsersChats,
+    createNewChat,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-
-export const useAppContext = () => useContext(AppContext);
